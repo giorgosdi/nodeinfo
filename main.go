@@ -18,5 +18,5 @@ package main
 import "nodeinfo/cmd"
 
 func main() {
-	cmd.Execute()
+	cmd.RootCmd()
 }
