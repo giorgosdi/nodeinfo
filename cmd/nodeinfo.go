@@ -16,17 +16,22 @@ limitations under the License.
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
+
+	"nodeinfo/pkg/auth"
+	"nodeinfo/pkg/resources"
 
 	"github.com/spf13/cobra"
 
 	flag "github.com/spf13/pflag"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
+
+type Flags struct {
+	namespace string
+	node      string
+	config    string
+}
 
 // nodeinfoCmd represents the nodeinfo command
 var nodeInfoCmd = &cobra.Command{
@@ -34,7 +39,6 @@ var nodeInfoCmd = &cobra.Command{
 	Aliases: []string{"nf", "info"},
 	Short:   "Info about a given node",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("nodeinfo called")
 		getInfo()
 	},
 }
@@ -49,22 +53,22 @@ func init() {
 	flag.Parse()
 }
 
-func getInfo() {
+func flags() Flags {
 	ns := flag.Lookup("namespace").Value.String()
 	node := flag.Lookup("node").Value.String()
 	conf := flag.Lookup("config").Value.String()
 
-	config, _ := clientcmd.BuildConfigFromFlags("", conf)
-	clientset, _ := kubernetes.NewForConfig(config)
-	pods, _ := clientset.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{})
-	fmt.Printf("Node : %s\n", node)
-	for _, pod := range pods.Items {
-		if pod.Spec.NodeName == node {
-			fmt.Printf("POD: %s\n", pod.ObjectMeta.Name)
-			for _, container := range pod.Spec.Containers {
-				fmt.Printf("Container: %s\n", container.Name)
-				fmt.Printf("Requested: %s   |    Limit: %s\n", container.Resources.Requests.Cpu(), container.Resources.Limits.Cpu())
-			}
-		}
+	return Flags{
+		namespace: ns,
+		node:      node,
+		config:    conf,
 	}
+}
+
+func getInfo() {
+
+	flags := flags()
+
+	client := auth.GetConfig(flags.config)
+	resources.GetPodInfo(flags.namespace, flags.node, client)
 }
