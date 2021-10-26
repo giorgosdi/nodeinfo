@@ -3,21 +3,18 @@ package resources
 import (
 	"context"
 	"fmt"
-	"os"
-	"sort"
-
+	logger "nodeinfo/pkg/logger"
 	"text/tabwriter"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-type Resp struct {
-	pod  string
-	creq string
-	clim string
-	mreq string
-	mlim string
+type podLogger struct {
+	pods   []P
+	header int
+	body   int
 }
 
 type Container struct {
@@ -37,10 +34,49 @@ type P struct {
 	mlimSum    int64
 }
 
-func getWriter() *tabwriter.Writer {
-	w := new(tabwriter.Writer)
-	w.Init(os.Stdout, 8, 8, 5, '\t', 0)
-	return w
+func (pLogger podLogger) GetHeader(w *tabwriter.Writer) (*tabwriter.Writer, int) {
+	header, err := fmt.Fprintf(w, "\nPOD\tCPU REQUEST\tCPU LIMIT\tMEM REQUEST\tMEM LIMIT")
+	if err != nil {
+		fmt.Println("Could not fetch header. Hint: maybe the tabwriter is facing issues")
+	}
+	return w, header
+}
+
+func (pLogger podLogger) GetBody(w *tabwriter.Writer, pod P) int {
+	body, err := fmt.Fprintf(w, "\n%s\t%dm\t%dm\t%dMi\t%dMi", pod.name, pod.creqSum, pod.climSum, pod.mreqSum, pod.mlimSum)
+	if err != nil {
+		fmt.Println("Could not fetch body. Hint: maybe the tabwriter is facing issues or the pod struct is missing a field")
+	}
+	return body
+}
+
+func (pLogger podLogger) Log(w *tabwriter.Writer) (*tabwriter.Writer, int) {
+	var val int
+	for _, pod := range pLogger.pods {
+		val = pLogger.GetBody(w, pod)
+	}
+	return w, val
+}
+
+func loop(pods *v1.PodList, node string) []P {
+	var listOfPods []P
+	var p P
+	for _, pod := range pods.Items {
+		if pod.Spec.NodeName == node {
+			p.name = pod.ObjectMeta.Name
+			p.containers = make([]Container, len(pod.Spec.Containers))
+			for idx, container := range pod.Spec.Containers {
+				p.containers[idx].name = container.Name
+				p.containers[idx].creq = container.Resources.Requests.Cpu().MilliValue()
+				p.containers[idx].mreq = container.Resources.Requests.Memory().Value()
+				p.containers[idx].clim = container.Resources.Limits.Cpu().MilliValue()
+				p.containers[idx].mlim = container.Resources.Limits.Memory().Value()
+			}
+			listOfPods = append(listOfPods, p)
+		}
+	}
+	aggregatedPodMetrics := aggregateMetrics(listOfPods)
+	return aggregatedPodMetrics
 }
 
 func (pod P) sumResource() P {
@@ -55,33 +91,20 @@ func (pod P) sumResource() P {
 	return pod
 }
 
+func aggregateMetrics(pods []P) []P {
+	listOfPods := []P{}
+	for _, pod := range pods {
+		pod = pod.sumResource()
+		listOfPods = append(listOfPods, pod)
+	}
+	return listOfPods
+}
+
 func GetPodInfo(ns, node string, client *kubernetes.Clientset) {
-	var listOfPods []P
-	var p P
-	w := getWriter()
-	defer w.Flush()
+	var pLogger podLogger
 	pods, _ := client.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{})
 	fmt.Printf("Node : %s\n", node)
-	for _, pod := range pods.Items {
-		if pod.Spec.NodeName == node {
-			//fmt.Printf("POD: %s\n", pod.ObjectMeta.Name)
-			p.name = pod.ObjectMeta.Name
-			p.containers = make([]Container, len(pod.Spec.Containers))
-			for idx, container := range pod.Spec.Containers {
-				//fmt.Printf("Container: %s\n", container.Name)
-				p.containers[idx].name = container.Name
-				p.containers[idx].creq = container.Resources.Requests.Cpu().MilliValue()
-				p.containers[idx].mreq = container.Resources.Requests.Memory().Value()
-				p.containers[idx].clim = container.Resources.Limits.Cpu().MilliValue()
-				p.containers[idx].mlim = container.Resources.Limits.Memory().Value()
-			}
-			listOfPods = append(listOfPods, p)
-		}
-	}
-	fmt.Fprintf(w, "\nPOD\tCPU REQUEST\tCPU LIMIT\tMEM REQUEST\tMEM LIMIT")
-	for _, pod := range listOfPods {
-		pod = pod.sumResource()
-		fmt.Fprintf(w, "\n%s\t%dm\t%dm\t%dMi\t%dMi", pod.name, pod.creqSum, pod.climSum, pod.mreqSum, pod.mlimSum)
-	}
-	fmt.Fprintf(w, "\n")
+	listOfPods := loop(pods, node)
+	pLogger.pods = listOfPods
+	logger.TableLogger(pLogger)
 }
