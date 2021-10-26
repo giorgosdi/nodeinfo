@@ -5,6 +5,7 @@ import (
 )
 
 type Logger interface {
-	GetHeader(w *tabwriter.Writer) (*tabwriter.Writer, int)
-	Log(w *tabwriter.Writer) (*tabwriter.Writer, int)
+	GetHeader(w *tabwriter.Writer)
+	GetBody(w *tabwriter.Writer)
+	Log(w *tabwriter.Writer)
 }

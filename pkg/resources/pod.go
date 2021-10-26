@@ -34,30 +34,6 @@ type P struct {
 	mlimSum    int64
 }
 
-func (pLogger podLogger) GetHeader(w *tabwriter.Writer) (*tabwriter.Writer, int) {
-	header, err := fmt.Fprintf(w, "\nPOD\tCPU REQUEST\tCPU LIMIT\tMEM REQUEST\tMEM LIMIT")
-	if err != nil {
-		fmt.Println("Could not fetch header. Hint: maybe the tabwriter is facing issues")
-	}
-	return w, header
-}
-
-func (pLogger podLogger) GetBody(w *tabwriter.Writer, pod P) int {
-	body, err := fmt.Fprintf(w, "\n%s\t%dm\t%dm\t%dMi\t%dMi", pod.name, pod.creqSum, pod.climSum, pod.mreqSum, pod.mlimSum)
-	if err != nil {
-		fmt.Println("Could not fetch body. Hint: maybe the tabwriter is facing issues or the pod struct is missing a field")
-	}
-	return body
-}
-
-func (pLogger podLogger) Log(w *tabwriter.Writer) (*tabwriter.Writer, int) {
-	var val int
-	for _, pod := range pLogger.pods {
-		val = pLogger.GetBody(w, pod)
-	}
-	return w, val
-}
-
 func loop(pods *v1.PodList, node string) []P {
 	var listOfPods []P
 	var p P
@@ -98,6 +74,27 @@ func aggregateMetrics(pods []P) []P {
 		listOfPods = append(listOfPods, pod)
 	}
 	return listOfPods
+}
+
+func (pLogger podLogger) GetHeader(w *tabwriter.Writer) {
+	_, err := fmt.Fprintf(w, "POD\tCPU REQUEST\tCPU LIMIT\tMEM REQUEST\tMEM LIMIT\n")
+	if err != nil {
+		fmt.Println("Could not fetch header. Hint: maybe the tabwriter is facing issues")
+	}
+}
+
+func (pLogger podLogger) GetBody(w *tabwriter.Writer) {
+	for _, pod := range pLogger.pods {
+		_, err := fmt.Fprintf(w, "%s\t%dm\t%dm\t%dMi\t%dMi\n", pod.name, pod.creqSum, pod.climSum, pod.mreqSum, pod.mlimSum)
+		if err != nil {
+			fmt.Println("Could not fetch body. Hint: maybe the tabwriter is facing issues or the pod struct is missing a field")
+		}
+		//bodies = append(bodies, body)
+	}
+}
+
+func (pLogger podLogger) Log(w *tabwriter.Writer) {
+	w.Flush()
 }
 
 func GetPodInfo(ns, node string, client *kubernetes.Clientset) {
