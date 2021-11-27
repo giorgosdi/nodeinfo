@@ -87,19 +87,20 @@ func (pod P) podMetrics(metricsClient metricsv.Interface) P {
 	pd.name = pod.name
 	pd.namespace = pod.namespace
 	pd.kind = pod.kind
-	// FIX: pods with multiple containers are aggregated and the cpu/mem utilization is multiplied
+	// FIX: optmize the loop
 	for _, liveMetrics := range podMetricsList.Containers {
 		for _, cntr := range pod.containers {
-			cntr.cutil = liveMetrics.Usage.Cpu().MilliValue()
-			cntr.mutil = liveMetrics.Usage.Memory().Value()
-			cn = append(cn, cntr)
+			if cntr.name == liveMetrics.Name {
+				cntr.cutil = liveMetrics.Usage.Cpu().MilliValue()
+				cntr.mutil = liveMetrics.Usage.Memory().Value()
+				cn = append(cn, cntr)
+				if cntr.name == "hydration-projector-5bd6fcf47c-cxt6b" {
+					fmt.Println(cn)
+				}
+			}
 		}
 	}
-	fmt.Println(cn)
 	pd.containers = cn
-	//if pod.name == "prometheus-prometheus-istio-1" {
-	//	fmt.Println(pod)
-	//}
 	return pd
 }
 
