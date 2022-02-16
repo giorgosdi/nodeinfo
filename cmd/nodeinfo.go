@@ -31,6 +31,7 @@ type Flags struct {
 	namespace string
 	node      string
 	config    string
+	metrics   string
 }
 
 // nodeinfoCmd represents the nodeinfo command
@@ -46,10 +47,10 @@ var nodeInfoCmd = &cobra.Command{
 func init() {
 	homeDir, _ := os.UserHomeDir()
 	defaultKubeConfig := fmt.Sprintf("%s/.kube/config", homeDir)
-	fmt.Println(defaultKubeConfig)
 	flag.StringP("namespace", "n", "", "The namespace you want search in")
 	flag.String("node", "", "The node you want to query")
 	flag.String("config", defaultKubeConfig, "KUBECONFIG you want to use")
+	flag.BoolP("metrics", "m", false, "show metrics")
 	flag.Parse()
 }
 
@@ -57,18 +58,19 @@ func flags() Flags {
 	ns := flag.Lookup("namespace").Value.String()
 	node := flag.Lookup("node").Value.String()
 	conf := flag.Lookup("config").Value.String()
+	metrics := flag.Lookup("metrics").Value.String()
 
 	return Flags{
 		namespace: ns,
 		node:      node,
 		config:    conf,
+		metrics:   metrics,
 	}
 }
 
 func getInfo() {
-
 	flags := flags()
-
-	client := auth.GetConfig(flags.config)
-	resources.GetPodInfo(flags.namespace, flags.node, client)
+	fmt.Println(flags)
+	corev1, metricsClient := auth.GetClients(flags.config)
+	resources.GetPodInfo(flags.namespace, flags.node, corev1, metricsClient)
 }
