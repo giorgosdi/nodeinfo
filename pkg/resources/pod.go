@@ -3,7 +3,8 @@ package resources
 import (
 	"context"
 	"fmt"
-	logger "nodeinfo/pkg/logger"
+	"nodeinfo/pkg/logger"
+	"nodeinfo/pkg/options"
 	"text/tabwriter"
 
 	v1 "k8s.io/api/core/v1"
@@ -94,9 +95,6 @@ func (pod P) podMetrics(metricsClient metricsv.Interface) P {
 				cntr.cutil = liveMetrics.Usage.Cpu().MilliValue()
 				cntr.mutil = liveMetrics.Usage.Memory().Value()
 				cn = append(cn, cntr)
-				if cntr.name == "hydration-projector-5bd6fcf47c-cxt6b" {
-					fmt.Println(cn)
-				}
 			}
 		}
 	}
@@ -148,11 +146,11 @@ func (pLogger podLogger) Log(w *tabwriter.Writer) {
 	w.Flush()
 }
 
-func GetPodInfo(ns, node string, client *kubernetes.Clientset, metricsClient metricsv.Interface) {
+func GetPodInfo(o *options.NodeInfoOptions, client *kubernetes.Clientset, metricsClient metricsv.Interface) {
 	var pLogger podLogger
-	pods, _ := client.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{})
-	fmt.Printf("Node : %s\n", node)
-	listOfPods := loop(pods, node, metricsClient)
+	pods, _ := client.CoreV1().Pods(o.Namespace).List(context.TODO(), metav1.ListOptions{})
+	listOfPods := loop(pods, o.Args[0], metricsClient)
 	pLogger.pods = listOfPods
 	logger.TableLogger(pLogger)
+
 }
