@@ -16,8 +16,9 @@ limitations under the License.
 package main
 
 import (
-	"nodeinfo/pkg/cmd"
 	"os"
+
+	"github.com/giorgosdi/nodeinfo/pkg/cmd"
 
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"

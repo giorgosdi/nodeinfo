@@ -3,9 +3,10 @@ package resources
 import (
 	"context"
 	"fmt"
-	"nodeinfo/pkg/logger"
-	"nodeinfo/pkg/options"
 	"text/tabwriter"
+
+	"github.com/giorgosdi/nodeinfo/pkg/logger"
+	"github.com/giorgosdi/nodeinfo/pkg/options"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -15,9 +15,9 @@ limitations under the License.
 package cmd
 
 import (
-	"nodeinfo/pkg/auth"
-	"nodeinfo/pkg/options"
-	"nodeinfo/pkg/resources"
+	"github.com/giorgosdi/nodeinfo/pkg/auth"
+	"github.com/giorgosdi/nodeinfo/pkg/options"
+	"github.com/giorgosdi/nodeinfo/pkg/resources"
 
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
