@@ -1,4 +1,4 @@
-module nodeinfo
+module github.com/giorgosdi/nodeinfo
 
 go 1.16
 
