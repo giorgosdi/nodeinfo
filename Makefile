@@ -1,20 +1,33 @@
 DATE=$(shell date)
 GOVERSION=$(shell go version | awk '{print $$3}')
 BUILDVERSION=$(shell git describe --tags | awk '{print $$1}')
-GOARCH=amd64
+GOARCH= \
+				amd64 \
+				arm64
 
-build: linux darwin sha tar
+build: linux darwin tar sha
 
-linux:
-	go build -ldflags="-X 'main.BuildVersion=${BUILDVERSION}' -X 'main.BuildDate=${DATE}' -X 'main.Platform=linux/${GOARCH}' -X 'main.GoVersion=${GOVERSION}'" -o kubectl_nodeinfo_linux_${GOARCH}/kubectl-nodeinfo
+linux: linux-amd64 linux-arm64
 
-darwin:
-	go build -ldflags="-X 'main.BuildVersion=${BUILDVERSION}' -X 'main.BuildDate=${DATE}' -X 'main.Platform=darwin/${GOARCH}' -X 'main.GoVersion=${GOVERSION}'" -o kubectl_nodeinfo_darwin_${GOARCH}/kubectl-nodeinfo
+darwin: darwin-amd64 darwin-arm64
 
-sha:
-	echo $(shell openssl sha256 < kubectl_nodeinfo_linux_${GOARCH}/kubectl-nodeinfo | awk '{print $$2}')	kubectl_nodeinfo_linux_${GOARCH} > kubectl_nodeinfo_linux_${GOARCH}.sha256
-	echo $(shell openssl sha256 < kubectl_nodeinfo_darwin_${GOARCH}/kubectl-nodeinfo | awk '{print $$2}')	kubectl_nodeinfo_darwin_${GOARCH} >> kubectl_nodeinfo_darwin_${GOARCH}.sha256
+sha: sha-amd64 sha-arm64
 
-tar:
-	tar czf kubectl_nodeinfo_linux_${GOARCH}.tar.gz kubectl_nodeinfo_linux_${GOARCH}/kubectl-nodeinfo
-	tar czf kubectl_nodeinfo_darwin_${GOARCH}.tar.gz kubectl_nodeinfo_darwin_${GOARCH}/kubectl-nodeinfo
+tar: tar-amd64 tar-arm64
+
+linux-%:
+	go build -ldflags="-X 'main.BuildVersion=${BUILDVERSION}' -X 'main.BuildDate=${DATE}' -X 'main.Platform=linux/$*' -X 'main.GoVersion=${GOVERSION}'" -o kubectl_nodeinfo_linux_$*/kubectl-nodeinfo
+
+darwin-%:
+	go build -ldflags="-X 'main.BuildVersion=${BUILDVERSION}' -X 'main.BuildDate=${DATE}' -X 'main.Platform=darwin/$*' -X 'main.GoVersion=${GOVERSION}'" -o kubectl_nodeinfo_darwin_$*/kubectl-nodeinfo
+
+sha-%:
+	echo $(shell openssl sha256 < kubectl_nodeinfo_linux_$*.tar.gz | awk '{print $$2}')	kubectl_nodeinfo_linux_$* > kubectl_nodeinfo_linux_$*.sha256
+	echo $(shell openssl sha256 < kubectl_nodeinfo_darwin_$*.tar.gz | awk '{print $$2}')	kubectl_nodeinfo_darwin_$* > kubectl_nodeinfo_darwin_$*.sha256
+
+tar-%:
+	tar czf kubectl_nodeinfo_linux_$*.tar.gz kubectl_nodeinfo_linux_$*/kubectl-nodeinfo
+	tar czf kubectl_nodeinfo_darwin_$*.tar.gz kubectl_nodeinfo_darwin_$*/kubectl-nodeinfo
+
+clean:
+	@rm -rf kubectl_nodeinfo*
