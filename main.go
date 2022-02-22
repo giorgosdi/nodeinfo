@@ -13,22 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package main
 
 import (
-	"os"
-
-	"github.com/giorgosdi/nodeinfo/pkg/cmd"
-
-	"github.com/spf13/pflag"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"github.com/giorgosdi/nodeinfo/cmd"
 )
 
-func KubectlNodeinfo() {
-	flags := pflag.NewFlagSet("kubectl-nodeinfo", pflag.ExitOnError)
-	pflag.CommandLine = flags
-	nodeInfoCmd := cmd.NewNodeInfoCommand(genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr})
-	if err := nodeInfoCmd.Execute(); err != nil {
-		os.Exit(1)
-	}
+func main() {
+	cmd.KubectlNodeinfo()
 }

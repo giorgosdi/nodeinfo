@@ -31,10 +31,10 @@ func NewNodeInfoCommand(streams genericclioptions.IOStreams) *cobra.Command {
 
 	// cmd represents the nodeinfo command
 	var cmd = &cobra.Command{
-		Use:     "nodeinfo <node>",
-		Aliases: []string{"nf", "info"},
-		Short:   "Info about a given node",
-		Args:    cobra.MaximumNArgs(1),
+		Use:          "kubectl nodeinfo <node> [flags]",
+		Short:        "Information about a given node",
+		Args:         cobra.MaximumNArgs(1),
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			o.Complete(cmd, args)
 			getInfo(cmd, o, args)
