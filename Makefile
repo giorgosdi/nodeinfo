@@ -6,7 +6,7 @@ GOARCH= \
 				amd64 \
 				arm64
 
-build: tag linux darwin tar sha
+build:  linux darwin tar sha
 
 linux: linux-amd64 linux-arm64
 
