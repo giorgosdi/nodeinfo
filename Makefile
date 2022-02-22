@@ -1,11 +1,12 @@
 DATE=$(shell date)
 GOVERSION=$(shell go version | awk '{print $$3}')
 BUILDVERSION=$(shell git describe --tags | awk '{print $$1}')
+TAG=$(shell cat .version)
 GOARCH= \
 				amd64 \
 				arm64
 
-build: linux darwin tar sha
+build: tag linux darwin tar sha
 
 linux: linux-amd64 linux-arm64
 
@@ -31,3 +32,10 @@ tar-%:
 
 clean:
 	@rm -rf kubectl_nodeinfo*
+
+release:
+	gh release create ${TAG} kubectl_nodeinfo*.tar.gz kubectl_nodeinfo*sha256 -F CHANGELOG/CHANGELOG-${TAG}.md
+
+tag:
+	git tag -a ${TAG} -m "version ${TAG}"
+	git push origin ${TAG}
