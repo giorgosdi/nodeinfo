@@ -27,8 +27,9 @@ sha-%:
 	echo $(shell openssl sha256 < kubectl_nodeinfo_darwin_$*.tar.gz | awk '{print $$2}')	kubectl_nodeinfo_darwin_$* > kubectl_nodeinfo_darwin_$*.sha256
 
 tar-%:
-	tar czf kubectl_nodeinfo_linux_$*.tar.gz kubectl_nodeinfo_linux_$*/kubectl-nodeinfo
-	tar czf kubectl_nodeinfo_darwin_$*.tar.gz kubectl_nodeinfo_darwin_$*/kubectl-nodeinfo
+	cp LICENSE kubectl_nodeinfo_linux_$* && cp LICENSE kubectl_nodeinfo_darwin_$*
+	cd kubectl_nodeinfo_linux_$* && tar czf kubectl_nodeinfo_linux_$*.tar.gz kubectl-nodeinfo LICENSE && mv kubectl_nodeinfo_linux_$*.tar.gz ../
+	cd kubectl_nodeinfo_darwin_$* && tar czf kubectl_nodeinfo_darwin_$*.tar.gz kubectl-nodeinfo LICENSE && mv kubectl_nodeinfo_darwin_$*.tar.gz ../
 
 clean:
 	@rm -rf kubectl_nodeinfo*
