@@ -84,8 +84,7 @@ func (pod P) podMetrics(metricsClient metricsv.Interface) P {
 	var pd P
 	var cn []Container
 	if err != nil {
-		fmt.Println("Could not get utilization metrics")
-		fmt.Println(err)
+		fmt.Printf("Could not get utilization metrics for : %s", pod.name)
 	}
 	pd.name = pod.name
 	pd.namespace = pod.namespace
@@ -153,7 +152,7 @@ func GetPodInfo(o *options.NodeInfoOptions, client *kubernetes.Clientset, metric
 	pods, _ := client.CoreV1().Pods(o.Namespace).List(context.TODO(), metav1.ListOptions{})
 	listOfPods := loop(pods, o.Args[0], metricsClient)
 	if len(listOfPods) == 0 {
-		fmt.Println("Node does not exist or has no pods")
+		fmt.Println("Node does not exist or has no pods in the current namespace(or at all)")
 		os.Exit(0)
 	}
 	pLogger.pods = listOfPods
