@@ -15,14 +15,14 @@ limitations under the License.
 package cmd
 
 import (
+	"os"
+
 	"github.com/giorgosdi/nodeinfo/pkg/auth"
 	"github.com/giorgosdi/nodeinfo/pkg/options"
 	"github.com/giorgosdi/nodeinfo/pkg/resources"
 
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-
-	flag "github.com/spf13/pflag"
 )
 
 func NewNodeInfoCommand(streams genericclioptions.IOStreams) *cobra.Command {
@@ -35,13 +35,17 @@ func NewNodeInfoCommand(streams genericclioptions.IOStreams) *cobra.Command {
 		Short:        "Information about a given node",
 		Args:         cobra.MaximumNArgs(1),
 		SilenceUsage: true,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				cmd.Help()
+				os.Exit(0)
+			}
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			o.Complete(cmd, args)
 			getInfo(cmd, o, args)
 		},
 	}
-
-	flag.BoolP("metrics", "m", false, "show metrics")
 	o.Config.AddFlags(cmd.Flags())
 
 	return cmd

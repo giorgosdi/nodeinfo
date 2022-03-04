@@ -44,8 +44,6 @@ func (o *NodeInfoOptions) Complete(c *cobra.Command, args []string) error {
 	if os.Getenv("KUBECONFIG") != "" {
 		o.Kubeconfig = os.Getenv("KUBECONFIG")
 	}
-	fmt.Println(o.Kubeconfig)
-
 	o.Args = args
 	return nil
 }

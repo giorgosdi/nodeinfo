@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"os"
 	"text/tabwriter"
 
 	"github.com/giorgosdi/nodeinfo/pkg/logger"
@@ -151,6 +152,10 @@ func GetPodInfo(o *options.NodeInfoOptions, client *kubernetes.Clientset, metric
 	var pLogger podLogger
 	pods, _ := client.CoreV1().Pods(o.Namespace).List(context.TODO(), metav1.ListOptions{})
 	listOfPods := loop(pods, o.Args[0], metricsClient)
+	if len(listOfPods) == 0 {
+		fmt.Println("Node does not exist or has no pods")
+		os.Exit(0)
+	}
 	pLogger.pods = listOfPods
 	logger.TableLogger(pLogger)
 
