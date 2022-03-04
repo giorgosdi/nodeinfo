@@ -25,6 +25,23 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
+var nodeInfoExample = `
+# Get info for a node
+kubectl nodeinfo ip-10-200-195-62.example.node
+
+
+# Get info for a node with a specific KUBECONFIG (flag)
+kubectl nodeinfo ip-10-200-195-62.example.node --kubeconfig /path/to/kubeconfig
+
+# Get info for a node with a specific KUBECONFIG (env variable)
+export KUBECONFIG=/path/to/kubeconfig;
+
+kubectl nodeinfo ip-10-200-195-62.example.node
+
+# Get info for a node for a specific namespace
+kubectl nodeinfo ip-10-200-195-62.example.node -n default
+`
+
 func NewNodeInfoCommand(streams genericclioptions.IOStreams) *cobra.Command {
 
 	o := options.NewNodeInfoOptions(streams)
@@ -35,6 +52,7 @@ func NewNodeInfoCommand(streams genericclioptions.IOStreams) *cobra.Command {
 		Short:        "Information about a given node",
 		Args:         cobra.MaximumNArgs(1),
 		SilenceUsage: true,
+		Example:      nodeInfoExample,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				cmd.Help()
