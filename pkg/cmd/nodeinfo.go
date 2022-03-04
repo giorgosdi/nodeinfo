@@ -15,6 +15,7 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/giorgosdi/nodeinfo/pkg/auth"
@@ -61,6 +62,11 @@ func NewNodeInfoCommand(streams genericclioptions.IOStreams) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			o.Complete(cmd, args)
+			_, err := os.Stat(o.Kubeconfig)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(0)
+			}
 			getInfo(cmd, o, args)
 		},
 	}
